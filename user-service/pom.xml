@@ -74,4 +74,16 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Amma Pickles Nexus Releases</name>
+            <url>http://localhost:8081/repository/amma-pickles-maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <name>Amma Pickles Nexus Snapshots</name>
+            <url>http://localhost:8081/repository/amma-pickles-maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
