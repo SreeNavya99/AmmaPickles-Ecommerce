@@ -16,6 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out Amma Pickles source code...'
+
                 checkout scm
             }
         }
@@ -30,8 +31,11 @@ pipeline {
                         echo "===== Building $SERVICE ====="
 
                         cd "$SERVICE"
+
                         chmod +x ../mvnw
+
                         ../mvnw clean verify
+
                         cd ..
                     done
                 '''
@@ -71,7 +75,8 @@ pipeline {
                 sh '''
                     set -e
 
-                    IMAGE_TAG="${BUILD_NUMBER}-${GIT_COMMIT:0:7}"
+                    SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
+                    IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
 
                     echo "Docker image tag: $IMAGE_TAG"
 
@@ -108,7 +113,8 @@ pipeline {
                 sh '''
                     set -e
 
-                    IMAGE_TAG="${BUILD_NUMBER}-${GIT_COMMIT:0:7}"
+                    SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
+                    IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
 
                     for SERVICE in $SERVICES
                     do
