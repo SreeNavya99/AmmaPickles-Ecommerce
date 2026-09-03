@@ -35,4 +35,39 @@ Thumbs.db
 # LOGS
 # ─────────────────────────────────────────────
 *.log
+logs/# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+
+# Logs
+*.log
 logs/
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+application-local.properties
+application-secret.properties
+
+# Temporary files
+*.tmp
+*.swp
