@@ -1,30 +1,28 @@
-resource "aws_instance" "bastion" {
-  ami                         = var.bastion_ami_id
-  instance_type               = var.bastion_instance_type
-  subnet_id                   = aws_subnet.public["public_a"].id
-  key_name                    = var.ec2_key_name
-  vpc_security_group_ids      = [aws_security_group.bastion.id]
-  associate_public_ip_address = true
+module "compute" {
+  source = "./modules/compute"
 
-  tags = {
-    Name = "amma-pickles-bastion"
-  }
+  bastion_ami_id            = var.bastion_ami_id
+  bastion_instance_type     = var.bastion_instance_type
+  public_subnet_id          = module.network.public_subnet_ids["public_a"]
+  ec2_key_name              = var.ec2_key_name
+  bastion_security_group_id = module.security.bastion_security_group_id
+  bastion_name              = "amma-pickles-bastion"
+
+  app_ami_id                   = var.app_ami_id
+  app_instance_type            = var.app_instance_type
+  app_subnet_id                = module.network.private_app_subnet_ids["app_a"]
+  app_security_group_id        = module.security.app_security_group_id
+  legacy_app_security_group_id = var.legacy_app_security_group_id
+  instance_profile_name        = module.iam.instance_profile_name
+  app_server_name              = "amma-pickles-app-server"
 }
 
-resource "aws_instance" "app_server" {
-  ami           = var.app_ami_id
-  instance_type = var.app_instance_type
-  subnet_id     = aws_subnet.private_app["app_a"].id
-  key_name      = var.ec2_key_name
+moved {
+  from = aws_instance.bastion
+  to   = module.compute.aws_instance.bastion
+}
 
-  vpc_security_group_ids = [
-    aws_security_group.app.id,
-    "sg-0c17ffa839fb3c338"
-  ]
-
-  iam_instance_profile = aws_iam_instance_profile.devops.name
-
-  tags = {
-    Name = "amma-pickles-app-server"
-  }
+moved {
+  from = aws_instance.app_server
+  to   = module.compute.aws_instance.app_server
 }

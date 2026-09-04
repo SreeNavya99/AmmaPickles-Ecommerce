@@ -1,14 +1,14 @@
-resource "aws_db_subnet_group" "amma_pickles" {
-  name        = "amma-pickles-db-subnet-group"
-  description = "db subnet group"
+module "database" {
+  source = "./modules/database"
 
-  subnet_ids = [
-    aws_subnet.private_db["db_a"].id,
-    aws_subnet.private_db["db_c"].id
+  db_subnet_group_name        = "amma-pickles-db-subnet-group"
+  db_subnet_group_description = "db subnet group"
+
+  db_subnet_ids = [
+    module.network.private_db_subnet_ids["db_a"],
+    module.network.private_db_subnet_ids["db_c"]
   ]
-}
 
-resource "aws_db_instance" "amma_pickles" {
   identifier = var.rds_identifier
 
   engine         = var.rds_engine
@@ -19,28 +19,22 @@ resource "aws_db_instance" "amma_pickles" {
   allocated_storage     = var.rds_allocated_storage
   max_allocated_storage = 1000
   storage_type          = "gp2"
-  storage_encrypted     = true
 
-  kms_key_id = "arn:aws:kms:ap-northeast-1:597994428626:key/57c0a679-2a30-401e-b1e7-9571f7147fd2"
+  kms_key_id = var.rds_kms_key_id
 
-  db_subnet_group_name = aws_db_subnet_group.amma_pickles.name
+  vpc_security_group_ids = var.rds_security_group_ids
 
-  vpc_security_group_ids = [
-    "sg-0c6128221c87d0195",
-    "sg-0dfd77f953bb63f03",
-    "sg-0ee802f81c7c8fe4c"
-  ]
-
-  publicly_accessible = false
-  multi_az            = var.rds_multi_az
-
+  multi_az                = var.rds_multi_az
   backup_retention_period = var.rds_backup_retention_period
-  copy_tags_to_snapshot   = true
+  skip_final_snapshot     = var.rds_skip_final_snapshot
+}
 
-  skip_final_snapshot = var.rds_skip_final_snapshot
-  deletion_protection = false
+moved {
+  from = aws_db_subnet_group.amma_pickles
+  to   = module.database.aws_db_subnet_group.amma_pickles
+}
 
-  lifecycle {
-    prevent_destroy = true
-  }
+moved {
+  from = aws_db_instance.amma_pickles
+  to   = module.database.aws_db_instance.amma_pickles
 }

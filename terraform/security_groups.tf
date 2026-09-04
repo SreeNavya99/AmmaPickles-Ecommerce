@@ -1,107 +1,38 @@
-resource "aws_security_group" "bastion" {
-  name        = "amma-pickles-bastion-sg"
-  description = "sg for bh"
-  vpc_id      = aws_vpc.amma_pickles.id
+module "security" {
+  source = "./modules/security"
 
-  ingress {
-    description = ""
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = [var.bastion_ssh_cidr]
-  }
+  vpc_id = module.network.vpc_id
 
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  bastion_name        = "amma-pickles-bastion-sg"
+  bastion_description = "sg for bh"
+  bastion_ssh_cidr    = var.bastion_ssh_cidr
+
+  app_name        = "amma-pickles-app-sg"
+  app_description = "sg for as"
+
+  alb_name        = "amma-pickles-alb-sg"
+  alb_description = "sg for alb"
+
+  rds_name        = "amma-pickles-rds-sg"
+  rds_description = "sg for rds"
 }
 
-resource "aws_security_group" "app" {
-  name        = "amma-pickles-app-sg"
-  description = "sg for as"
-  vpc_id      = aws_vpc.amma_pickles.id
-
-  ingress {
-    description     = "appserver"
-    protocol        = "tcp"
-    from_port       = 22
-    to_port         = 22
-    security_groups = [aws_security_group.bastion.id]
-  }
-
-  ingress {
-    description     = "jenkins"
-    protocol        = "tcp"
-    from_port       = 8082
-    to_port         = 8082
-    security_groups = [aws_security_group.bastion.id]
-  }
-
-  ingress {
-    description     = "nexus"
-    protocol        = "tcp"
-    from_port       = 8081
-    to_port         = 8081
-    security_groups = [aws_security_group.bastion.id]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+moved {
+  from = aws_security_group.bastion
+  to   = module.security.aws_security_group.bastion
 }
 
-resource "aws_security_group" "alb" {
-  name        = "amma-pickles-alb-sg"
-  description = "sg for alb"
-  vpc_id      = aws_vpc.amma_pickles.id
-
-  ingress {
-    description = ""
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = ""
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+moved {
+  from = aws_security_group.app
+  to   = module.security.aws_security_group.app
 }
 
-resource "aws_security_group" "rds" {
-  name        = "amma-pickles-rds-sg"
-  description = "sg for rds"
-  vpc_id      = aws_vpc.amma_pickles.id
+moved {
+  from = aws_security_group.alb
+  to   = module.security.aws_security_group.alb
+}
 
-  ingress {
-    description     = "rds to appserver"
-    protocol        = "tcp"
-    from_port       = 3306
-    to_port         = 3306
-    security_groups = [aws_security_group.app.id]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+moved {
+  from = aws_security_group.rds
+  to   = module.security.aws_security_group.rds
 }

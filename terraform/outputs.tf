@@ -1,44 +1,74 @@
 output "vpc_id" {
-  description = "Amma Pickles VPC ID"
-  value       = aws_vpc.amma_pickles.id
+  description = "VPC ID"
+  value       = module.network.vpc_id
 }
 
 output "public_subnet_ids" {
   description = "Public subnet IDs"
-  value       = { for k, v in aws_subnet.public : k => v.id }
+  value       = module.network.public_subnet_ids
 }
 
 output "private_app_subnet_ids" {
   description = "Private application subnet IDs"
-  value       = { for k, v in aws_subnet.private_app : k => v.id }
+  value       = module.network.private_app_subnet_ids
 }
 
 output "private_db_subnet_ids" {
   description = "Private database subnet IDs"
-  value       = { for k, v in aws_subnet.private_db : k => v.id }
+  value       = module.network.private_db_subnet_ids
+}
+
+output "bastion_security_group_id" {
+  description = "Bastion security group ID"
+  value       = module.security.bastion_security_group_id
+}
+
+output "app_security_group_id" {
+  description = "Application security group ID"
+  value       = module.security.app_security_group_id
+}
+
+output "alb_security_group_id" {
+  description = "ALB security group ID"
+  value       = module.security.alb_security_group_id
+}
+
+output "rds_security_group_id" {
+  description = "RDS security group ID"
+  value       = module.security.rds_security_group_id
 }
 
 output "bastion_instance_id" {
-  description = "Bastion EC2 instance ID"
-  value       = aws_instance.bastion.id
+  description = "Bastion instance ID"
+  value       = module.compute.bastion_instance_id
 }
 
 output "app_server_instance_id" {
-  description = "DevOps/application EC2 instance ID"
-  value       = aws_instance.app_server.id
+  description = "Application server instance ID"
+  value       = module.compute.app_server_instance_id
 }
 
 output "eks_cluster_name" {
   description = "EKS cluster name"
-  value       = aws_eks_cluster.amma_pickles.name
+  value       = module.eks.cluster_name
 }
 
 output "eks_node_group_name" {
   description = "EKS node group name"
-  value       = aws_eks_node_group.amma_pickles.node_group_name
+  value       = module.eks.node_group_name
 }
 
 output "rds_endpoint" {
   description = "RDS endpoint"
-  value       = aws_db_instance.amma_pickles.endpoint
+  value       = module.database.endpoint
+}
+
+output "devops_role_arn" {
+  description = "DevOps IAM role ARN"
+  value       = module.iam.role_arn
+}
+
+output "devops_instance_profile_name" {
+  description = "DevOps EC2 instance profile name"
+  value       = module.iam.instance_profile_name
 }

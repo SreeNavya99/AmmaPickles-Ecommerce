@@ -1,35 +1,10 @@
-resource "aws_iam_role" "devops" {
-  name = "${var.project_name}-devops-role"
+module "iam" {
+  source = "./modules/iam"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-
-    Statement = [
-      {
-        Effect = "Allow"
-
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  description = "Allows EC2 instances to call AWS services on your behalf."
-
-  tags = {
-    Name        = "${var.project_name}-devops-role"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Project     = var.project_name
-  }
-}
-
-resource "aws_iam_role_policy" "devops" {
-  name = "AmmaPickles-DevOps-Access"
-  role = aws_iam_role.devops.id
+  role_name             = "${var.project_name}-devops-role"
+  role_description      = "Allows EC2 instances to call AWS services on your behalf."
+  policy_name           = "AmmaPickles-DevOps-Access"
+  instance_profile_name = "${var.project_name}-devops-role"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -131,9 +106,26 @@ resource "aws_iam_role_policy" "devops" {
       }
     ]
   })
+
+  tags = {
+    Name        = "${var.project_name}-devops-role"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Project     = var.project_name
+  }
 }
 
-resource "aws_iam_instance_profile" "devops" {
-  name = "${var.project_name}-devops-role"
-  role = aws_iam_role.devops.name
+moved {
+  from = aws_iam_role.devops
+  to   = module.iam.aws_iam_role.devops
+}
+
+moved {
+  from = aws_iam_role_policy.devops
+  to   = module.iam.aws_iam_role_policy.devops
+}
+
+moved {
+  from = aws_iam_instance_profile.devops
+  to   = module.iam.aws_iam_instance_profile.devops
 }

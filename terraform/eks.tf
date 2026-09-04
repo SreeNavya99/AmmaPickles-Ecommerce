@@ -1,76 +1,39 @@
-resource "aws_eks_cluster" "amma_pickles" {
-  name     = var.eks_cluster_name
-  version  = var.eks_kubernetes_version
-  role_arn = var.eks_cluster_role_arn
+module "eks" {
+  source = "./modules/eks"
 
-  vpc_config {
-    subnet_ids = [
-      aws_subnet.private_app["app_a"].id,
-      aws_subnet.private_app["app_c"].id
-    ]
-
-    endpoint_private_access = false
-    endpoint_public_access  = true
-
-    public_access_cidrs = [
-      "0.0.0.0/0"
-    ]
-
-    security_group_ids = [
-      "sg-087feae7d0b219c74"
-    ]
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  tags = {
-    Name                                          = "eksctl-amma-pickles-eks-cluster/ControlPlane"
-    "alpha.eksctl.io/cluster-name"                = "amma-pickles-eks"
-    "alpha.eksctl.io/cluster-oidc-enabled"        = "true"
-    "alpha.eksctl.io/eksctl-version"              = "0.230.0"
-    "eksctl.cluster.k8s.io/v1alpha1/cluster-name" = "amma-pickles-eks"
-  }
-}
-
-resource "aws_eks_node_group" "amma_pickles" {
-  cluster_name    = aws_eks_cluster.amma_pickles.name
-  node_group_name = var.eks_node_group_name
-  node_role_arn   = var.eks_node_role_arn
+  cluster_name       = var.eks_cluster_name
+  kubernetes_version = var.eks_kubernetes_version
+  cluster_role_arn   = var.eks_cluster_role_arn
 
   subnet_ids = [
-    aws_subnet.private_app["app_a"].id,
-    aws_subnet.private_app["app_c"].id
+    module.network.private_app_subnet_ids["app_a"],
+    module.network.private_app_subnet_ids["app_c"]
   ]
 
-  instance_types = var.eks_node_instance_types
+  cluster_security_group_id = var.eks_cluster_security_group_id
+  cluster_tags              = var.eks_cluster_tags
 
-  scaling_config {
-    desired_size = var.eks_node_desired_size
-    min_size     = var.eks_node_min_size
-    max_size     = var.eks_node_max_size
-  }
+  node_group_name     = var.eks_node_group_name
+  node_role_arn       = var.eks_node_role_arn
+  node_instance_types = var.eks_node_instance_types
+  node_desired_size   = var.eks_node_desired_size
+  node_min_size       = var.eks_node_min_size
+  node_max_size       = var.eks_node_max_size
 
-  labels = {
-    "alpha.eksctl.io/cluster-name"   = "amma-pickles-eks"
-    "alpha.eksctl.io/nodegroup-name" = "amma-pickles-ng"
-  }
+  node_labels = var.eks_node_labels
 
-  launch_template {
-    id      = "lt-0bb33be927e423888"
-    version = "1"
-  }
+  launch_template_id      = var.eks_node_launch_template_id
+  launch_template_version = var.eks_node_launch_template_version
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  node_tags = var.eks_node_tags
+}
 
-  tags = {
-    "alpha.eksctl.io/cluster-name"                = "amma-pickles-eks"
-    "alpha.eksctl.io/eksctl-version"              = "0.230.0"
-    "alpha.eksctl.io/nodegroup-name"              = "amma-pickles-ng"
-    "alpha.eksctl.io/nodegroup-type"              = "managed"
-    "eksctl.cluster.k8s.io/v1alpha1/cluster-name" = "amma-pickles-eks"
-  }
+moved {
+  from = aws_eks_cluster.amma_pickles
+  to   = module.eks.aws_eks_cluster.amma_pickles
+}
+
+moved {
+  from = aws_eks_node_group.amma_pickles
+  to   = module.eks.aws_eks_node_group.amma_pickles
 }

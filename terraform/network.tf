@@ -1,116 +1,75 @@
-resource "aws_vpc" "amma_pickles" {
-  cidr_block = var.vpc_cidr
+module "network" {
+  source = "./modules/network"
 
-  tags = {
-    Name = "${local.name_prefix}-vpc"
-  }
+  vpc_cidr                     = var.vpc_cidr
+  vpc_name                     = "${local.name_prefix}-vpc"
+  public_subnets               = local.public_subnets
+  private_app_subnets          = local.private_app_subnets
+  private_db_subnets           = local.private_db_subnets
+  igw_name                     = "${local.name_prefix}-igw"
+  nat_eip_count                = var.nat_eip_count
+  nat_gateway_id               = var.nat_gateway_id
+  public_route_table_name      = "${local.name_prefix}-public-rt"
+  private_app_route_table_name = "${local.name_prefix}-private-rt"
+  private_db_route_table_name  = "${local.name_prefix}-db-rt"
 }
 
-resource "aws_subnet" "public" {
-  for_each = local.public_subnets
-
-  vpc_id                  = aws_vpc.amma_pickles.id
-  cidr_block              = each.value.cidr
-  availability_zone       = each.value.az
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = each.value.name
-  }
+moved {
+  from = aws_vpc.amma_pickles
+  to   = module.network.aws_vpc.amma_pickles
 }
 
-resource "aws_subnet" "private_app" {
-  for_each = local.private_app_subnets
-
-  vpc_id            = aws_vpc.amma_pickles.id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.az
-
-  tags = {
-    Name = each.value.name
-  }
+moved {
+  from = aws_subnet.public
+  to   = module.network.aws_subnet.public
 }
 
-resource "aws_subnet" "private_db" {
-  for_each = local.private_db_subnets
-
-  vpc_id            = aws_vpc.amma_pickles.id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.az
-
-  tags = {
-    Name = each.value.name
-  }
+moved {
+  from = aws_subnet.private_app
+  to   = module.network.aws_subnet.private_app
 }
 
-resource "aws_internet_gateway" "amma_pickles" {
-  vpc_id = aws_vpc.amma_pickles.id
-
-  tags = {
-    Name = "${local.name_prefix}-igw"
-  }
+moved {
+  from = aws_subnet.private_db
+  to   = module.network.aws_subnet.private_db
 }
 
-resource "aws_eip" "nat" {
-  count  = var.nat_eip_count
-  domain = "vpc"
+moved {
+  from = aws_internet_gateway.amma_pickles
+  to   = module.network.aws_internet_gateway.amma_pickles
 }
 
-data "aws_nat_gateway" "amma_pickles" {
-  id = var.nat_gateway_id
+moved {
+  from = aws_eip.nat
+  to   = module.network.aws_eip.nat
 }
 
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.amma_pickles.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.amma_pickles.id
-  }
-
-  tags = {
-    Name = "${local.name_prefix}-public-rt"
-  }
+moved {
+  from = aws_route_table.public
+  to   = module.network.aws_route_table.public
 }
 
-resource "aws_route_table" "private_app" {
-  vpc_id = aws_vpc.amma_pickles.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = data.aws_nat_gateway.amma_pickles.id
-  }
-
-  tags = {
-    Name = "${local.name_prefix}-private-rt"
-  }
+moved {
+  from = aws_route_table.private_app
+  to   = module.network.aws_route_table.private_app
 }
 
-resource "aws_route_table" "private_db" {
-  vpc_id = aws_vpc.amma_pickles.id
-
-  tags = {
-    Name = "${local.name_prefix}-db-rt"
-  }
+moved {
+  from = aws_route_table.private_db
+  to   = module.network.aws_route_table.private_db
 }
 
-resource "aws_route_table_association" "public" {
-  for_each = local.public_subnets
-
-  subnet_id      = aws_subnet.public[each.key].id
-  route_table_id = aws_route_table.public.id
+moved {
+  from = aws_route_table_association.public
+  to   = module.network.aws_route_table_association.public
 }
 
-resource "aws_route_table_association" "private_app" {
-  for_each = local.private_app_subnets
-
-  subnet_id      = aws_subnet.private_app[each.key].id
-  route_table_id = aws_route_table.private_app.id
+moved {
+  from = aws_route_table_association.private_app
+  to   = module.network.aws_route_table_association.private_app
 }
 
-resource "aws_route_table_association" "private_db" {
-  for_each = local.private_db_subnets
-
-  subnet_id      = aws_subnet.private_db[each.key].id
-  route_table_id = aws_route_table.private_db.id
+moved {
+  from = aws_route_table_association.private_db
+  to   = module.network.aws_route_table_association.private_db
 }
