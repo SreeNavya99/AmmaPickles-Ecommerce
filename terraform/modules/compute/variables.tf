@@ -38,9 +38,6 @@ variable "app_security_group_id" {
   type = string
 }
 
-variable "legacy_app_security_group_id" {
-  type = string
-}
 
 variable "instance_profile_name" {
   type = string

@@ -11,98 +11,132 @@ module "iam" {
 
     Statement = [
       {
-        Sid      = "ECR"
+        Sid      = "ECRAccess"
         Effect   = "Allow"
         Action   = ["ecr:*"]
         Resource = "*"
       },
       {
-        Sid      = "EKS"
+        Sid      = "EKSAccess"
         Effect   = "Allow"
         Action   = ["eks:*"]
         Resource = "*"
       },
       {
-        Sid    = "IAM"
+        Sid    = "IAMAccess"
         Effect = "Allow"
         Action = [
-          "iam:GetRole",
-          "iam:GetInstanceProfile",
-          "iam:ListInstanceProfilesForRole",
-          "iam:ListRolePolicies",
-          "iam:GetRolePolicy",
-          "iam:PutRolePolicy",
-          "iam:DeleteRolePolicy",
           "iam:CreateRole",
           "iam:DeleteRole",
+          "iam:GetRole",
+          "iam:ListRoles",
           "iam:UpdateRole",
-          "iam:UpdateRoleDescription",
           "iam:AttachRolePolicy",
           "iam:DetachRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:GetRolePolicy",
+          "iam:ListRolePolicies",
           "iam:ListAttachedRolePolicies",
-          "iam:PassRole",
           "iam:CreateInstanceProfile",
           "iam:DeleteInstanceProfile",
+          "iam:GetInstanceProfile",
           "iam:AddRoleToInstanceProfile",
           "iam:RemoveRoleFromInstanceProfile",
-          "iam:CreateServiceLinkedRole",
-          "iam:GetOpenIDConnectProvider",
+          "iam:PassRole",
           "iam:CreateOpenIDConnectProvider",
           "iam:DeleteOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider",
+          "iam:ListOpenIDConnectProviders",
           "iam:TagRole",
           "iam:TagInstanceProfile",
-          "iam:UntagRole",
-          "iam:UntagInstanceProfile"
+          "iam:TagOpenIDConnectProvider"
         ]
         Resource = "*"
       },
       {
-        Sid      = "RDS"
+        Sid      = "RDSAccess"
         Effect   = "Allow"
         Action   = ["rds:*"]
         Resource = "*"
       },
       {
-        Sid      = "CloudFormation"
+        Sid      = "CloudFormationAccess"
         Effect   = "Allow"
         Action   = ["cloudformation:*"]
         Resource = "*"
       },
       {
-        Sid      = "EC2"
+        Sid      = "EC2Access"
         Effect   = "Allow"
         Action   = ["ec2:*"]
         Resource = "*"
       },
       {
-        Sid      = "CloudWatch"
+        Sid      = "CloudWatchAccess"
         Effect   = "Allow"
         Action   = ["cloudwatch:*"]
         Resource = "*"
       },
       {
-        Sid      = "Logs"
+        Sid      = "CloudWatchLogsAccess"
         Effect   = "Allow"
         Action   = ["logs:*"]
         Resource = "*"
       },
       {
-        Sid      = "SecretsManager"
+        Sid      = "SecretsManagerAccess"
         Effect   = "Allow"
         Action   = ["secretsmanager:*"]
         Resource = "*"
       },
       {
-        Sid      = "SSM"
+        Sid      = "SSMAccess"
         Effect   = "Allow"
         Action   = ["ssm:*"]
         Resource = "*"
       },
       {
-        Sid      = "STS"
+        Sid      = "STSAccess"
         Effect   = "Allow"
         Action   = ["sts:GetCallerIdentity"]
         Resource = "*"
+      },
+      {
+        Sid    = "TerraformStateBucket"
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+          "s3:GetBucketVersioning",
+          "s3:PutBucketVersioning",
+          "s3:GetEncryptionConfiguration",
+          "s3:PutEncryptionConfiguration",
+          "s3:GetBucketPublicAccessBlock",
+          "s3:PutBucketPublicAccessBlock"
+        ]
+        Resource = "arn:aws:s3:::amma-pickles-terraform-state-597994428626"
+      },
+      {
+        Sid    = "TerraformStateObjects"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "arn:aws:s3:::amma-pickles-terraform-state-597994428626/*"
+      },
+      {
+        Sid    = "TerraformStateKMS"
+        Effect = "Allow"
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey"
+        ]
+        Resource = "arn:aws:kms:ap-northeast-1:597994428626:key/8c624857-7943-40eb-baba-ae9682e1ad4a"
       }
     ]
   })

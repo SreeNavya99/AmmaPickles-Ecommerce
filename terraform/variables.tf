@@ -48,10 +48,6 @@ variable "public_route_table_name" {
   type        = string
 }
 
-variable "private_route_table_name" {
-  description = "Private application route table name"
-  type        = string
-}
 
 variable "db_route_table_name" {
   description = "Private database route table name"
@@ -253,10 +249,6 @@ variable "rds_security_group_ids" {
   type        = list(string)
 }
 
-variable "legacy_app_security_group_id" {
-  description = "Existing additional security group attached to the application server"
-  type        = string
-}
 
 variable "eks_cluster_security_group_id" {
   description = "Existing EKS control-plane security group"

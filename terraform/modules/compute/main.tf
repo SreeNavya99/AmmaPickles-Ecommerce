@@ -12,14 +12,13 @@ resource "aws_instance" "bastion" {
 }
 
 resource "aws_instance" "app_server" {
-  ami                    = var.app_ami_id
-  instance_type          = var.app_instance_type
-  subnet_id              = var.app_subnet_id
-  key_name               = var.ec2_key_name
+  ami           = var.app_ami_id
+  instance_type = var.app_instance_type
+  subnet_id     = var.app_subnet_id
+  key_name      = var.ec2_key_name
 
   vpc_security_group_ids = [
-    var.app_security_group_id,
-    var.legacy_app_security_group_id
+    var.app_security_group_id
   ]
 
   iam_instance_profile = var.instance_profile_name
