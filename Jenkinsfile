@@ -1,3 +1,5 @@
+
+
 pipeline {
     agent any
 
@@ -44,28 +46,39 @@ pipeline {
 
         stage('Publish Maven Artifacts to Nexus') {
             steps {
-                configFileProvider([
-                    configFile(
-                        fileId: "${NEXUS_SETTINGS_ID}",
-                        variable: 'MAVEN_SETTINGS'
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus-maven',
+                        usernameVariable: 'NEXUS_USERNAME',
+                        passwordVariable: 'NEXUS_PASSWORD'
                     )
                 ]) {
-                    sh '''
-                        set -e
 
-                        for SERVICE in $SERVICES
-                        do
-                            echo "===== Publishing $SERVICE to Nexus ====="
+                    configFileProvider([
+                        configFile(
+                            fileId: "${NEXUS_SETTINGS_ID}",
+                            variable: 'MAVEN_SETTINGS'
+                        )
+                    ]) {
 
-                            cd "$SERVICE"
+                        sh '''
+                            set -e
 
-                            ../mvnw deploy \
-                                --settings "$MAVEN_SETTINGS" \
-                                -DskipTests
+                            for SERVICE in $SERVICES
+                            do
+                                echo "===== Publishing $SERVICE to Nexus ====="
 
-                            cd ..
-                        done
-                    '''
+                                cd "$SERVICE"
+
+                                ../mvnw deploy \
+                                    --settings "$MAVEN_SETTINGS" \
+                                    -DskipTests
+
+                                cd ..
+                            done
+                        '''
+                    }
                 }
             }
         }
@@ -133,6 +146,7 @@ pipeline {
     }
 
     post {
+
         success {
             echo '========================================'
             echo 'AMMA PICKLES CI PIPELINE SUCCESSFUL'
