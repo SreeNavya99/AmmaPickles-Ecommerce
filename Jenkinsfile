@@ -6,7 +6,7 @@ pipeline {
         AWS_ACCOUNT_ID = '597994428626'
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-        NEXUS_SETTINGS_ID = '10086d3e-8987-4c0c-a30b-be8acd197ecf'
+        NEXUS_SETTINGS_ID = '4b74d0c0-9d58-4550-9968-5ea92a1cefc6'
 
         SERVICES = 'auth-service user-service address-service category-service product-service cart-service order-service notification-service'
     }
