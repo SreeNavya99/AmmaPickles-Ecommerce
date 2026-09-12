@@ -15,6 +15,8 @@ module "security" {
 
   rds_name        = "amma-pickles-rds-sg"
   rds_description = "sg for rds"
+
+  eks_node_security_group_id = var.eks_node_security_group_id
 }
 
 moved {

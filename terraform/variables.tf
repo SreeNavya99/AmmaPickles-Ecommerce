@@ -255,6 +255,11 @@ variable "eks_cluster_security_group_id" {
   type        = string
 }
 
+variable "eks_node_security_group_id" {
+  description = "Existing EKS worker node security group"
+  type        = string
+}
+
 variable "eks_node_launch_template_id" {
   description = "Existing EKS managed node group launch template ID"
   type        = string
