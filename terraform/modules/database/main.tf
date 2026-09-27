@@ -3,6 +3,10 @@ resource "aws_db_subnet_group" "amma_pickles" {
   description = var.db_subnet_group_description
 
   subnet_ids = var.db_subnet_ids
+
+  tags = {
+    Name = var.db_subnet_group_name
+  }
 }
 
 resource "aws_db_instance" "amma_pickles" {
@@ -16,9 +20,8 @@ resource "aws_db_instance" "amma_pickles" {
   allocated_storage     = var.allocated_storage
   max_allocated_storage = var.max_allocated_storage
   storage_type          = var.storage_type
-  storage_encrypted     = true
 
-  kms_key_id = var.kms_key_id
+  storage_encrypted = true
 
   db_subnet_group_name = aws_db_subnet_group.amma_pickles.name
 
@@ -26,6 +29,7 @@ resource "aws_db_instance" "amma_pickles" {
 
   publicly_accessible = false
   multi_az            = var.multi_az
+  port                = 3306
 
   backup_retention_period = var.backup_retention_period
   copy_tags_to_snapshot   = true
@@ -33,7 +37,14 @@ resource "aws_db_instance" "amma_pickles" {
   skip_final_snapshot = var.skip_final_snapshot
   deletion_protection = false
 
+  username                    = var.username
+  manage_master_user_password = var.manage_master_user_password
+
   lifecycle {
     prevent_destroy = true
+  }
+
+  tags = {
+    Name = var.identifier
   }
 }

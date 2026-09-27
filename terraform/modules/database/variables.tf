@@ -38,10 +38,6 @@ variable "storage_type" {
   type = string
 }
 
-variable "kms_key_id" {
-  type = string
-}
-
 variable "vpc_security_group_ids" {
   type = list(string)
 }
@@ -55,5 +51,14 @@ variable "backup_retention_period" {
 }
 
 variable "skip_final_snapshot" {
+  type = bool
+}
+
+variable "username" {
+  type      = string
+  sensitive = true
+}
+
+variable "manage_master_user_password" {
   type = bool
 }
