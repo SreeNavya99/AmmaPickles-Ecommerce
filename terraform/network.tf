@@ -8,7 +8,6 @@ module "network" {
   private_db_subnets           = local.private_db_subnets
   igw_name                     = "${local.name_prefix}-igw"
   nat_eip_count                = var.nat_eip_count
-  nat_gateway_id               = var.nat_gateway_id
   public_route_table_name      = "${local.name_prefix}-public-rt"
   private_app_route_table_name = "${local.name_prefix}-private-rt"
   private_db_route_table_name  = "${local.name_prefix}-db-rt"

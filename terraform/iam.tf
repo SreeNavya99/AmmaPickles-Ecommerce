@@ -115,7 +115,7 @@ module "iam" {
           "s3:GetBucketPublicAccessBlock",
           "s3:PutBucketPublicAccessBlock"
         ]
-        Resource = "arn:aws:s3:::amma-pickles-terraform-state-597994428626"
+        Resource = "arn:aws:s3:::amma-pickles-terraform-state-206632868064"
       },
       {
         Sid    = "TerraformStateObjects"
@@ -125,19 +125,8 @@ module "iam" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource = "arn:aws:s3:::amma-pickles-terraform-state-597994428626/*"
+        Resource = "arn:aws:s3:::amma-pickles-terraform-state-206632868064/*"
       },
-      {
-        Sid    = "TerraformStateKMS"
-        Effect = "Allow"
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:GenerateDataKey",
-          "kms:DescribeKey"
-        ]
-        Resource = "arn:aws:kms:ap-northeast-1:597994428626:key/8c624857-7943-40eb-baba-ae9682e1ad4a"
-      }
     ]
   })
 

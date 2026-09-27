@@ -48,20 +48,8 @@ output "app_server_instance_id" {
   value       = module.compute.app_server_instance_id
 }
 
-output "eks_cluster_name" {
-  description = "EKS cluster name"
-  value       = module.eks.cluster_name
-}
 
-output "eks_node_group_name" {
-  description = "EKS node group name"
-  value       = module.eks.node_group_name
-}
 
-output "rds_endpoint" {
-  description = "RDS endpoint"
-  value       = module.database.endpoint
-}
 
 output "devops_role_arn" {
   description = "DevOps IAM role ARN"

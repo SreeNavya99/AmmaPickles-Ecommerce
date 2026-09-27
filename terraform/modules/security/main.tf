@@ -97,7 +97,6 @@ resource "aws_security_group" "rds" {
     to_port         = 3306
     security_groups = [
       aws_security_group.app.id,
-      var.eks_node_security_group_id
     ]
   }
 

@@ -79,6 +79,7 @@ application-secret.properties
 *.tfstate
 *.tfstate.*
 *.tfvars
+!terraform/terraform.tfvars
 *.tfvars.json
 crash.log
 crash.*.log

@@ -38,10 +38,6 @@ variable "nat_eip_count" {
   type = number
 }
 
-variable "nat_gateway_id" {
-  type = string
-}
-
 variable "public_route_table_name" {
   type = string
 }

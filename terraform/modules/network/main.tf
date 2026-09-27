@@ -12,7 +12,7 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.amma_pickles.id
   cidr_block              = each.value.cidr
   availability_zone       = each.value.az
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
 
   tags = {
     Name = each.value.name
@@ -56,8 +56,17 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 }
 
-data "aws_nat_gateway" "amma_pickles" {
-  id = var.nat_gateway_id
+resource "aws_nat_gateway" "amma_pickles" {
+  allocation_id = aws_eip.nat[0].id
+  subnet_id     = aws_subnet.public["public_a"].id
+
+  depends_on = [
+    aws_internet_gateway.amma_pickles
+  ]
+
+  tags = {
+    Name = "amma-pickles-nat"
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -78,7 +87,7 @@ resource "aws_route_table" "private_app" {
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = data.aws_nat_gateway.amma_pickles.id
+    nat_gateway_id = aws_nat_gateway.amma_pickles.id
   }
 
   tags = {
