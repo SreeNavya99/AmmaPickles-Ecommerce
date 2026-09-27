@@ -71,3 +71,15 @@ application-secret.properties
 # Temporary files
 *.tmp
 *.swp
+
+# ─────────────────────────────────────────────
+# TERRAFORM
+# ─────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform/terraform.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
