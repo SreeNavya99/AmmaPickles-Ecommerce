@@ -91,10 +91,10 @@ resource "aws_security_group" "rds" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "rds to appserver"
-    protocol        = "tcp"
-    from_port       = 3306
-    to_port         = 3306
+    description = "rds to appserver"
+    protocol    = "tcp"
+    from_port   = 3306
+    to_port     = 3306
     security_groups = [
       aws_security_group.app.id,
     ]
