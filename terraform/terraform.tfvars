@@ -32,7 +32,7 @@ ec2_key_name          = "keypair"
 bastion_ssh_cidr      = "49.43.234.35/32"
 
 app_ami_id        = "ami-06380d26ad7176f2c"
-app_instance_type = "t3.micro"
+app_instance_type = "c7i-flex.large"
 
 rds_identifier = "amma-pickles-db"
 
