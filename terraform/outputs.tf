@@ -60,3 +60,12 @@ output "devops_instance_profile_name" {
   description = "DevOps EC2 instance profile name"
   value       = module.iam.instance_profile_name
 }
+
+output "ecr_repository_urls" {
+  description = "ECR repository URLs for application services"
+  value = {
+    for service, repository in aws_ecr_repository.services :
+    service => repository.repository_url
+  }
+}
+

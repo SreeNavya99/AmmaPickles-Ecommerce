@@ -128,3 +128,8 @@ variable "environment" {
   description = "Deployment environment"
   type        = string
 }
+
+variable "container_services" {
+  description = "Application services that require ECR repositories"
+  type        = set(string)
+}
