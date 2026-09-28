@@ -1,16 +1,19 @@
-
-
 pipeline {
     agent any
 
     environment {
         AWS_REGION = 'ap-northeast-1'
-        AWS_ACCOUNT_ID = '597994428626'
+        AWS_ACCOUNT_ID = '206632868064'
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-        NEXUS_SETTINGS_ID = '4b74d0c0-9d58-4550-9968-5ea92a1cefc6'
+        NEXUS_SETTINGS_ID = 'amma-pickles-maven-settings'
 
         SERVICES = 'auth-service user-service address-service category-service product-service cart-service order-service notification-service'
+    }
+
+    tools {
+        jdk 'Java17'
+        maven 'Maven3'
     }
 
     stages {
@@ -18,7 +21,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out Amma Pickles source code...'
-
                 checkout scm
             }
         }
@@ -46,7 +48,6 @@ pipeline {
 
         stage('Publish Maven Artifacts to Nexus') {
             steps {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'nexus-maven',
@@ -146,7 +147,6 @@ pipeline {
     }
 
     post {
-
         success {
             echo '========================================'
             echo 'AMMA PICKLES CI PIPELINE SUCCESSFUL'

@@ -52,3 +52,15 @@ rds_skip_final_snapshot     = true
 rds_username = "ammaadmin"
 
 environment = "dev"
+
+
+container_services = [
+  "auth-service",
+  "user-service",
+  "address-service",
+  "category-service",
+  "product-service",
+  "cart-service",
+  "order-service",
+  "notification-service"
+]
