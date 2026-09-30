@@ -56,6 +56,16 @@ resource "aws_security_group" "app" {
   }
 }
 
+resource "aws_vpc_security_group_ingress_rule" "jenkins_to_nexus" {
+  security_group_id            = aws_security_group.app.id
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8081
+  to_port                      = 8081
+  description                  = "jenkins-to-nexus"
+}
+
+
 resource "aws_security_group" "alb" {
   name        = var.alb_name
   description = var.alb_description
@@ -107,3 +117,5 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
