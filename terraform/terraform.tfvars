@@ -64,3 +64,8 @@ container_services = [
   "order-service",
   "notification-service"
 ]
+nexus_ami_id = "ami-06380d26ad7176f2c"
+
+nexus_instance_type = "t3.micro"
+
+nexus_root_volume_size = 30

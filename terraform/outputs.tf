@@ -48,7 +48,10 @@ output "app_server_instance_id" {
   value       = module.compute.app_server_instance_id
 }
 
-
+output "nexus_server_instance_id" {
+  description = "Nexus server instance ID"
+  value       = module.compute.nexus_server_instance_id
+}
 
 
 output "devops_role_arn" {
