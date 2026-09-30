@@ -48,6 +48,14 @@ resource "aws_security_group" "app" {
     security_groups = [aws_security_group.bastion.id]
   }
 
+  ingress {
+    description     = "jenkins-to-nexus"
+    protocol        = "tcp"
+    from_port       = 8081
+    to_port         = 8081
+    security_groups = [aws_security_group.app.id]
+  }
+
   egress {
     protocol    = "-1"
     from_port   = 0
@@ -107,3 +115,5 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
