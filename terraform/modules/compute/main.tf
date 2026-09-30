@@ -21,7 +21,6 @@ resource "aws_instance" "app_server" {
   ami           = var.app_ami_id
   instance_type = var.app_instance_type
   subnet_id     = var.app_subnet_id
-  key_name      = var.ec2_key_name
 
   vpc_security_group_ids = [
     var.app_security_group_id
@@ -29,7 +28,7 @@ resource "aws_instance" "app_server" {
 
   iam_instance_profile = var.instance_profile_name
 
-  user_data = <<-EOF
+  user_data = <<-EOF_USERDATA
     #!/bin/bash
 
     set -euxo pipefail
@@ -44,9 +43,6 @@ resource "aws_instance" "app_server" {
     systemctl enable docker
     systemctl start docker
 
-    systemctl enable amazon-ssm-agent
-    systemctl start amazon-ssm-agent
-
     usermod -aG docker ec2-user
 
     mkdir -p /home/ec2-user/.ssh
@@ -54,7 +50,7 @@ resource "aws_instance" "app_server" {
     chown -R ec2-user:ec2-user /home/ec2-user/.ssh
 
     echo "CI/App server bootstrap completed."
-  EOF
+  EOF_USERDATA
 
   tags = {
     Name = var.app_server_name
@@ -67,13 +63,15 @@ resource "aws_instance" "nexus_server" {
   instance_type = var.nexus_instance_type
   subnet_id     = var.nexus_subnet_id
 
+  key_name = var.ec2_key_name
+
   vpc_security_group_ids = [
     var.nexus_security_group_id
   ]
 
   iam_instance_profile = var.instance_profile_name
 
-  user_data = <<-EOF
+  user_data = <<-EOF_USERDATA
     #!/bin/bash
 
     set -euxo pipefail
@@ -99,7 +97,7 @@ resource "aws_instance" "nexus_server" {
       -p 8081:8081 \
       -v /opt/nexus-data:/nexus-data \
       sonatype/nexus3:latest
-  EOF
+  EOF_USERDATA
 
   root_block_device {
     volume_size = var.nexus_root_volume_size
