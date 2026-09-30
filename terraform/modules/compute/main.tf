@@ -21,6 +21,7 @@ resource "aws_instance" "app_server" {
   ami           = var.app_ami_id
   instance_type = var.app_instance_type
   subnet_id     = var.app_subnet_id
+  key_name      = var.ec2_key_name
 
   vpc_security_group_ids = [
     var.app_security_group_id
@@ -42,6 +43,9 @@ resource "aws_instance" "app_server" {
 
     systemctl enable docker
     systemctl start docker
+
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
 
     usermod -aG docker ec2-user
 
