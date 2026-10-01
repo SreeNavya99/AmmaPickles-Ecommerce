@@ -64,8 +64,9 @@ container_services = [
   "order-service",
   "notification-service"
 ]
-nexus_ami_id = "ami-06380d26ad7176f2c"
 
-nexus_instance_type = "t3.micro"
+storage_availability_zone = "ap-northeast-1a"
+storage_size              = 20
+storage_volume_type       = "gp3"
+storage_name              = "amma-pickles-app-data"
 
-nexus_root_volume_size = 30

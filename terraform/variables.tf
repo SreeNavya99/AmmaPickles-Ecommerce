@@ -133,19 +133,26 @@ variable "container_services" {
   description = "Application services that require ECR repositories"
   type        = set(string)
 }
-variable "nexus_ami_id" {
-  description = "AMI ID for the Nexus server"
+
+
+
+variable "storage_availability_zone" {
+  description = "Availability Zone for application storage"
   type        = string
 }
 
-variable "nexus_instance_type" {
-  description = "EC2 instance type for Nexus"
-  type        = string
-}
-
-variable "nexus_root_volume_size" {
-  description = "Root EBS volume size for Nexus in GiB"
+variable "storage_size" {
+  description = "Application storage size in GB"
   type        = number
 }
 
+variable "storage_volume_type" {
+  description = "Application storage volume type"
+  type        = string
+}
+
+variable "storage_name" {
+  description = "Name tag for application storage"
+  type        = string
+}
 

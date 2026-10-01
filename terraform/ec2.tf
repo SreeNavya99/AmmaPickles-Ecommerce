@@ -16,11 +16,4 @@ module "compute" {
   instance_profile_name = module.iam.instance_profile_name
   app_server_name       = "amma-pickles-app-server"
 
-  nexus_ami_id            = var.nexus_ami_id
-  nexus_instance_type     = var.nexus_instance_type
-  nexus_subnet_id         = module.network.private_app_subnet_ids["app_a"]
-  nexus_security_group_id = module.security.app_security_group_id
-  nexus_root_volume_size  = var.nexus_root_volume_size
-  nexus_server_name       = "amma-pickles-nexus-server"
-
 }
