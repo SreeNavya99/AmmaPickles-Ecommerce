@@ -13,6 +13,8 @@ module "compute" {
   app_subnet_id         = module.network.private_app_subnet_ids["app_a"]
   app_security_group_id = module.security.app_security_group_id
 
+
+
   instance_profile_name = module.iam.instance_profile_name
   app_server_name       = "amma-pickles-app-server"
 
