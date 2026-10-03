@@ -1,10 +1,14 @@
 Amma Pickles — AWS DevOps Project
 
-Project Overview
+A production-style AWS DevOps implementation for the Amma Pickles Ecommerce microservices application.
 
-Amma Pickles is an e-commerce microservices application being used as a practical AWS DevOps / CI-CD project.
+The project focuses on building a reproducible cloud infrastructure and CI pipeline using Terraform, AWS, GitHub, Jenkins, Nexus, Docker, and Amazon ECR, with Amazon EKS planned for the deployment stage.
 
-The project focuses on building a production-style AWS infrastructure and CI pipeline using Terraform, Jenkins, Nexus, Docker, Amazon ECR, and later Amazon EKS.
+1. Project Overview
+
+Application: Amma Pickles Ecommerce
+
+Architecture: Microservices
 
 Application Services
 
@@ -24,115 +28,143 @@ order-service
 
 notification-service
 
-Technology Stack
+The DevOps implementation is designed around the following flow:
 
-Application
+Developer
+   |
+   v
+GitHub
+   |
+   v
+Jenkins
+   |
+   +--------------------+
+   |                    |
+   v                    v
+Build & Test        Maven Deploy
+   |                    |
+   |                    v
+   |                  Nexus
+   |                    |
+   +---------+----------+
+             |
+             v
+       Docker Build
+             |
+             v
+          Amazon ECR
+             |
+             v
+        Amazon EKS
+        (deployment)
 
-Java 17
+2. Technology Stack
+
+Application / Build
+
+Java
 
 Spring Boot
 
 Maven
 
-REST APIs
+Maven Wrapper
 
-DevOps / CI
+Source Control
+
+Git
 
 GitHub
 
+CI/CD
+
 Jenkins
 
-Maven
+GitHub
 
-Nexus Repository
+Jenkins Pipeline
+
+Artifact Management
+
+Sonatype Nexus Repository
+
+Containers
 
 Docker
 
 Amazon ECR
 
-AWS
-
-VPC
-
-Public and private subnets
-
-Internet Gateway
-
-NAT Gateway
-
-Bastion host
-
-EC2
-
-RDS MySQL
-
-Application Load Balancer
-
-IAM
-
-Amazon ECR
-
-AWS Secrets Manager
-
-AWS Systems Manager
-
 Infrastructure as Code
 
 Terraform
 
-S3 remote Terraform state
+AWS Services
 
-S3 state locking with lockfile
+VPC
 
-Future Deployment
+EC2
 
-Amazon EKS
+EBS
 
-Kubernetes
+RDS
 
-AWS Architecture
+ALB
 
-Current high-level architecture:
+IAM
 
-                         Internet
-                            |
-                            v
-                         ALB
-                            |
-                    Private App Subnet
-                            |
-              +-------------+-------------+
-              |                           |
-              v                           v
-        Application / CI EC2            RDS
-              |
-       +------+----------------+
-       |                       |
-       v                       v
-    Jenkins                  Nexus
-     :8082                    :8081
-       |
-       +------------------+
-       |                  |
-       v                  v
-   Docker Engine         ECR
-                           |
-                +----------+----------+
-                |          |          |
-             Services   Services   Services
+ECR
 
-Jenkins and Nexus currently run on the same existing private App/CI EC2 instance.
+EKS
 
-AWS Region
+S3
 
-Region: ap-northeast-1
-Account: configured through AWS/Terraform
+Secrets Manager
 
-The repository should not require AWS access keys to be committed into source control.
+CloudWatch
 
-Terraform
+Systems Manager
 
-Terraform manages the AWS infrastructure.
+3. AWS Environment
+
+AWS Account: 206632868064
+
+AWS Region: ap-northeast-1
+
+The project uses Terraform to manage the AWS infrastructure.
+
+Main Infrastructure
+
+AWS
+|
++-- VPC
+|   |
+|   +-- Public Subnets
+|   |     +-- Bastion
+|   |
+|   +-- Private App Subnets
+|   |     +-- Jenkins
+|   |     +-- Nexus
+|   |
+|   +-- Private DB Subnets
+|         +-- RDS MySQL
+|
++-- Application Load Balancer
+|
++-- Amazon ECR
+|
++-- Amazon EKS
+|
++-- S3
+|     +-- Terraform Remote State
+|
++-- Secrets Manager
+|     +-- RDS credentials
+|
++-- IAM
+
+4. Terraform
+
+Terraform is used as the primary Infrastructure as Code tool.
 
 Terraform Structure
 
@@ -150,6 +182,7 @@ terraform/
 ├── terraform.tfvars
 ├── variables.tf
 ├── versions.tf
+│
 └── modules/
     ├── addons/
     ├── compute/
@@ -160,53 +193,254 @@ terraform/
     ├── security/
     └── storage/
 
-Terraform Backend
+Terraform State
 
-Terraform state is stored remotely in S3.
+Terraform state is stored remotely in Amazon S3.
 
-S3 bucket:
+Bucket:
 amma-pickles-terraform-state-206632868064
 
-State key:
+Key:
 amma-pickles/terraform.tfstate
 
 Region:
 ap-northeast-1
 
-The backend uses S3 encryption and the Terraform S3 lockfile mechanism.
+The S3 backend uses a lock file to protect concurrent Terraform operations.
 
-Terraform Workflow
+5. Terraform CI Workflow
 
-Feature Branch
-      |
-      v
+Terraform changes are validated through GitHub Actions.
+
 Pull Request
-      |
-      v
+     |
+     v
+Terraform Init
+     |
+     v
+Terraform Format Check
+     |
+     v
+Terraform Validate
+     |
+     v
 Terraform Plan
-      |
-      v
-Review
-      |
-      v
-Merge to main
-      |
-      v
-GitHub Actions
-      |
-      v
-Terraform Apply
-      |
-      v
-Production Environment Approval
 
-GitHub Actions authenticates to AWS using GitHub OIDC.
+Changes merged/pushed to main continue through the apply stage.
+
+main
+ |
+ v
+Terraform Plan
+ |
+ v
+Production Environment Approval
+ |
+ v
+Terraform Apply
+
+AWS authentication from GitHub Actions uses OIDC rather than storing long-lived AWS access keys.
+
+6. EC2 CI Server
+
+The project uses an existing private-subnet EC2 instance as the CI server.
+
+The same EC2 host runs:
+
+EC2
+|
++-- Jenkins Container
+|
++-- Nexus Container
+|
++-- Docker Engine
+|
++-- Java
+|
++-- Git
+|
++-- AWS CLI
+|
++-- EBS Storage
+
+The CI server is not directly exposed to the public internet.
+
+Access is performed through the Bastion host using SSH tunneling.
+
+7. Persistent CI Storage
+
+A dedicated 20 GB gp3 EBS volume is used for Jenkins and Nexus data.
+
+/data/
+├── jenkins/
+└── nexus/
+
+The volume is mounted on the CI EC2 instance as:
+
+/data
+
+The mount is persisted using /etc/fstab.
+
+Storage Design
+
+EBS
+ |
+ v
+/data
+ |
+ +-- jenkins
+ |
+ +-- nexus
+
+This keeps CI application data separate from the EC2 root filesystem.
+
+8. Jenkins
+
+Jenkins runs as a Docker container.
+
+Jenkins
+Image:
+jenkins/jenkins:lts-jdk17
+
+Host Port:
+8082
+
+Container Port:
+8080
+
+Persistent Data:
+/data/jenkins:/var/jenkins_home
+
+Jenkins is connected to the CI Docker network:
+
+amma-pickles-ci
+
+Docker socket access is provided so Jenkins can build Docker images.
+
+/var/run/docker.sock
+
+9. Nexus Repository
+
+Nexus runs as a Docker container on the same EC2 host.
+
+Nexus
+Image:
+sonatype/nexus3:latest
+
+Host Port:
+8081
+
+Container Port:
+8081
+
+Persistent Data:
+/data/nexus:/nexus-data
+
+Jenkins and Nexus communicate through the Docker network:
+
+amma-pickles-ci
+
+The Nexus repository structure is:
+
+Hosted:
+- amma-pickles-maven-releases
+- amma-pickles-maven-snapshots
+
+Group:
+- amma-pickles-maven-group
+
+The group repository is used for dependency resolution.
+
+Hosted repositories are used for publishing application artifacts.
+
+10. Maven Artifact Flow
+
+Each microservice contains a Maven pom.xml.
+
+The project uses:
+
+Group ID:
+com.ammapickles
+
+Services use their service name as the artifact ID.
+
+Snapshot artifacts are published to:
+
+amma-pickles-maven-snapshots
+
+Release artifacts are published to:
+
+amma-pickles-maven-releases
+
+Jenkins uses a managed Maven settings.xml configuration.
+
+Credentials are stored in Jenkins Credentials rather than hardcoded in the repository.
+
+11. Jenkins CI Pipeline
+
+The Jenkins pipeline is designed around the following stages:
+
+1. Checkout
+      |
+2. Build & Test
+      |
+3. Publish Maven Artifacts to Nexus
+      |
+4. Build Docker Images
+      |
+5. Login to Amazon ECR
+      |
+6. Push Images to ECR
+
+Checkout
+
+Jenkins checks out the source code from GitHub.
+
+Build & Test
+
+Each service is built using the Maven Wrapper.
+
+mvnw clean verify
+
+All eight services are processed by the pipeline.
+
+Nexus
+
+Successful Maven builds are deployed to Nexus.
+
+Docker
+
+A Docker image is created for every service.
 
 ECR
 
-Amazon ECR repositories are managed through Terraform.
+Images are tagged and pushed to Amazon ECR.
 
-Repositories:
+12. Docker Image Tagging
+
+Docker images are tagged using the Jenkins build number and Git commit.
+
+Format:
+
+BUILD_NUMBER-SHORT_GIT_COMMIT
+
+Example:
+
+25-8b1137f
+
+This makes the image traceable to a specific CI build and source revision.
+
+Example:
+
+auth-service:25-8b1137f
+
+The image is then pushed to:
+
+206632868064.dkr.ecr.ap-northeast-1.amazonaws.com/amma-pickles/auth-service:25-8b1137f
+
+13. Amazon ECR
+
+The project contains one ECR repository for each microservice.
 
 amma-pickles/auth-service
 amma-pickles/user-service
@@ -217,238 +451,49 @@ amma-pickles/cart-service
 amma-pickles/order-service
 amma-pickles/notification-service
 
-ECR configuration uses image immutability and scan-on-push.
+ECR repositories use immutable image tags and scan-on-push configuration.
 
-Image Tagging
+14. IAM
 
-Jenkins creates traceable image tags using:
-
-BUILD_NUMBER-GIT_COMMIT
-
-Example:
-
-23-a81f4c2
-
-Images are pushed as:
-
-<account>.dkr.ecr.<region>.amazonaws.com/amma-pickles/<service>:<tag>
-
-Jenkins
-
-Jenkins is the CI engine.
-
-Jenkins runs in Docker on the existing App/CI EC2.
-
-Jenkins Container
-
-Container: jenkins
-Image: jenkins/jenkins:lts-jdk17
-
-Host Port: 8082
-Container Port: 8080
-
-Persistent Data:
- /data/jenkins
-
-Jenkins uses Java 17.
-
-The Jenkins container Java home is:
-
-/opt/java/openjdk
-
-Maven is configured as a Jenkins-managed tool.
-
-Jenkins Tools
-
-JDK:
-java17
-
-Maven:
-maven3
-
-Jenkins Credentials
-
-GitHub authentication uses an SSH credential.
-
-Nexus authentication uses a Jenkins username/password credential.
-
-The Nexus credential ID used by the Jenkinsfile is:
-
-Jenkins-nexus
-
-Do not put Nexus passwords, GitHub private keys, or AWS access keys into the Jenkinsfile.
-
-Nexus Repository
-
-Nexus runs on the same EC2 instance as Jenkins.
-
-Container: nexus
-Image: sonatype/nexus3:latest
-
-Host Port: 8081
-Container Port: 8081
-
-Persistent Data:
- /data/nexus
-
-Both Jenkins and Nexus use the Docker network:
-
-amma-pickles-ci
-
-Maven Repositories
-
-Hosted repositories:
-
-amma-pickles-maven-releases
-amma-pickles-maven-snapshots
-
-Group repository:
-
-amma-pickles-maven-group
-
-The group repository includes the hosted repositories and Maven Central for dependency consumption.
-
-Maven artifacts are published to the appropriate hosted release/snapshot repository.
-
-Jenkins CI Pipeline
-
-The current CI pipeline is:
-
-GitHub
-   |
-   v
-Jenkins
-   |
-   +--> Checkout
-   |
-   +--> Build & Test
-   |
-   +--> Publish Maven Artifacts
-   |        |
-   |        v
-   |      Nexus
-   |
-   +--> Build Docker Images
-   |
-   +--> Login to Amazon ECR
-   |
-   +--> Push Images to ECR
-
-Pipeline Stages
-
-1. Checkout
-
-Jenkins checks out the Git repository using the configured GitHub SSH credential.
-
-2. Build & Test
-
-Each microservice is built independently using the repository Maven Wrapper:
-
-../mvnw clean verify
-
-The pipeline processes:
-
-auth-service
-user-service
-address-service
-category-service
-product-service
-cart-service
-order-service
-notification-service
-
-3. Publish Maven Artifacts
-
-Each service publishes its Maven artifact to Nexus:
-
-../mvnw deploy
-
-Jenkins injects Nexus credentials at runtime.
-
-The Maven settings file is managed by Jenkins.
-
-Managed Maven settings ID:
-
-amma-pickles-maven-settings
-
-4. Build Docker Images
-
-Each service has its own Dockerfile.
-
-The Docker images use Java 17 runtime images.
-
-Example runtime base image:
-
-eclipse-temurin:17-jre
-
-The Dockerfile copies the generated Maven JAR:
-
-target/*.jar
-
-into the container.
-
-5. Login to ECR
-
-Jenkins uses the AWS CLI and the EC2 instance IAM role:
-
-aws ecr get-login-password
-
-No static AWS access keys are required for Jenkins.
-
-6. Push Images to ECR
-
-Images are tagged with a traceable build/revision tag and pushed to the corresponding ECR repository.
-
-Jenkinsfile
-
-The current CI Jenkinsfile contains these stages:
-
-Checkout
-Build & Test
-Publish Maven Artifacts to Nexus
-Build Docker Images
-Login to Amazon ECR
-Push Images to ECR
-
-EKS/Kubernetes deployment is not part of the current CI pipeline.
-
-EKS deployment can be added later as a separate CD/deployment phase.
-
-IAM
-
-The Jenkins/App EC2 uses the IAM role:
+The CI EC2 instance uses an IAM role:
 
 amma-pickles-devops-role
 
-The role is attached through an EC2 instance profile.
+The role allows the EC2 environment to interact with AWS services required by the project.
 
-The role currently includes the permissions required for the existing project environment.
+The project currently uses a broad development/lab policy covering services such as:
 
-The Jenkins CI pipeline specifically requires ECR authentication and image-push permissions.
+ECR
 
-The long-term goal is to manage IAM completely through Terraform and reduce broad permissions to least privilege.
+EKS
 
-Persistent Storage
+IAM
 
-The Jenkins/Nexus EC2 has a dedicated EBS volume.
+RDS
 
-Volume type: gp3
-Size: 20 GB
-Mount point: /data
+EC2
 
-Storage layout:
+CloudFormation
 
-/data/
-├── jenkins/
-└── nexus/
+CloudWatch
 
-The volume is mounted persistently through /etc/fstab.
+CloudWatch Logs
 
-Terraform manages the EBS volume configuration.
+Secrets Manager
 
-Database
+Systems Manager
 
-RDS MySQL is deployed in private DB subnets.
+S3 Terraform state
+
+STS
+
+The policy is managed through Terraform.
+
+For a production deployment, the permissions should be reduced according to the exact CI/CD responsibilities.
+
+15. RDS Database
+
+The application database is Amazon RDS for MySQL.
 
 Identifier:
 amma-pickles-db
@@ -456,27 +501,25 @@ amma-pickles-db
 Engine:
 MySQL 8.4.11
 
-Instance class:
+Instance:
 db.t4g.micro
 
 Database:
 amma_pickles
 
-Database credentials are managed through AWS Secrets Manager.
+The database is located in private database subnets.
 
-RDS uses a dedicated security group and accepts MySQL traffic from the application security group.
+Database credentials are managed using AWS Secrets Manager.
 
-RDS has Terraform deletion protection using:
+The RDS resource has Terraform lifecycle protection against accidental destruction.
 
-lifecycle {
-  prevent_destroy = true
-}
+prevent_destroy = true
 
-Do not casually destroy or recreate the database.
+16. Network Security
 
-Security Groups
+The infrastructure separates workloads using security groups and private/public subnet boundaries.
 
-The major traffic paths are:
+High-level traffic flow:
 
 Internet
    |
@@ -492,126 +535,337 @@ RDS
 Administrative access:
 
 Administrator
-   |
-   v
+     |
+     v
+Bastion
+     |
+     v
+Private EC2
+
+CI access:
+
 Bastion
    |
-   v
-Private App/CI EC2
+   +--> Jenkins : 8082
+   |
+   +--> Nexus   : 8081
 
-Jenkins and Nexus are not directly exposed to the public internet.
+Jenkins and Nexus are not intended to be directly exposed to the internet.
 
-Local access can be provided through an SSH tunnel through the bastion.
+17. GitHub → Jenkins Integration
 
-Example:
+GitHub is the source repository:
 
-ssh -i "keypair.pem" -N \
-  -L 8081:10.0.11.63:8081 \
-  -L 8082:10.0.11.63:8082 \
-  ec2-user@<BASTION_PUBLIC_IP>
+https://github.com/SreeNavya99/AmmaPickles-Ecommerce.git
 
-Then:
+Jenkins uses an SSH credential for repository access.
 
-http://localhost:8081  -> Nexus
-http://localhost:8082  -> Jenkins
+The Jenkins-specific SSH key is stored inside Jenkins credentials.
 
-Docker
+GitHub contains the public key as a repository deploy key.
 
-Docker is installed at the EC2 host level.
+This avoids using a personal GitHub password/token directly inside Jenkins.
 
-Jenkins uses the host Docker daemon through:
+18. Jenkins Credentials
 
-/var/run/docker.sock
+Sensitive values are stored using Jenkins Credentials.
 
-Jenkins and Nexus are connected to:
+Examples include:
 
-amma-pickles-ci
+GitHub SSH credential
+Nexus username/password
+AWS authentication
 
-Docker image builds are performed by Jenkins during the CI pipeline.
+Credentials should not be committed to:
 
-Development / CI Validation
+Jenkinsfile
+pom.xml
+settings.xml
+Git repository
+Dockerfile
 
-Before considering the CI pipeline successful, verify:
+The pipeline injects credentials only when required.
 
-[ ] GitHub checkout works
-[ ] Java 17 is available to Jenkins
-[ ] Maven builds all services
-[ ] Tests/verification complete successfully
-[ ] Maven artifacts publish to Nexus
-[ ] Docker images build successfully
-[ ] Jenkins can authenticate to ECR
-[ ] All service images push successfully to ECR
-[ ] Image tags are traceable to the Jenkins build and Git commit
+19. Current CI/CD Architecture
 
-Future CD / Kubernetes
+                    GitHub
+                       |
+                       v
+                  Jenkins CI
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+     Build & Test              Maven Deploy
+          |                         |
+          |                       Nexus
+          |                         |
+          +------------+------------+
+                       |
+                       v
+                  Docker Build
+                       |
+                       v
+                     ECR
+                       |
+                       v
+                     EKS
+                (deployment stage)
 
-Amazon EKS is planned for the deployment phase.
+20. EKS Deployment
 
-The intended future flow is:
+Amazon EKS is part of the planned deployment architecture.
+
+The current project focuses first on completing the CI pipeline:
 
 GitHub
-   |
-   v
-Jenkins CI
-   |
-   +--> Maven
-   |
-   +--> Nexus
-   |
-   +--> Docker
-   |
-   +--> ECR
-   |
-   v
-Amazon EKS
-   |
-   v
-Kubernetes
-   |
-   v
-Amma Pickles Microservices
-
-EKS/Kubernetes deployment should be added only after the CI pipeline is stable.
-
-Project Principles
-
-Infrastructure should be reproducible through Terraform.
-
-AWS credentials should not be hardcoded in source code.
-
-Jenkins credentials should be stored in Jenkins Credentials.
-
-Secrets should be stored in appropriate secret-management systems.
-
-Docker images should use traceable tags instead of relying only on latest.
-
-Production infrastructure should not be destroyed casually.
-
-IAM permissions should move toward least privilege.
-
-CI and CD responsibilities should remain clearly separated.
-
-Application builds should fail the pipeline when compilation, verification, artifact publishing, image building, or image pushing fails.
-
-Current CI Goal
-
-The immediate goal is to achieve a completely successful Jenkins pipeline:
-
-GitHub
-  ↓
-Checkout
-  ↓
+   ↓
+Jenkins
+   ↓
 Build & Test
-  ↓
+   ↓
 Nexus
-  ↓
-Docker Build
-  ↓
-ECR Login
-  ↓
-ECR Push
-  ↓
-SUCCESS
+   ↓
+Docker
+   ↓
+ECR
 
-Once this is stable, the project can move to the CD/EKS deployment phase.
+The next deployment layer will connect ECR images to Kubernetes/EKS.
+
+Expected future flow:
+
+ECR
+ |
+ v
+Amazon EKS
+ |
+ +-- auth-service
+ +-- user-service
+ +-- address-service
+ +-- category-service
+ +-- product-service
+ +-- cart-service
+ +-- order-service
+ +-- notification-service
+
+21. Project Principles
+
+This project follows these DevOps principles:
+
+Infrastructure as Code
+
+AWS infrastructure is managed using Terraform.
+
+Immutable Artifacts
+
+Docker images are pushed to ECR using traceable image tags.
+
+Centralized Artifact Management
+
+Maven artifacts are stored in Nexus.
+
+Secret Management
+
+Credentials are stored in Jenkins Credentials or AWS Secrets Manager rather than source code.
+
+Persistent CI Data
+
+Jenkins and Nexus use dedicated EBS storage.
+
+Private Infrastructure
+
+CI and database resources are placed in private networking where appropriate.
+
+Reproducibility
+
+Infrastructure configuration and CI pipeline definitions are stored in Git.
+
+Traceability
+
+Every Docker image can be associated with:
+
+Jenkins Build
+      +
+Git Commit
+
+22. Repository Structure
+
+AmmaPickles-Ecommerce/
+│
+├── auth-service/
+├── user-service/
+├── address-service/
+├── category-service/
+├── product-service/
+├── cart-service/
+├── order-service/
+├── notification-service/
+│
+├── terraform/
+│   ├── modules/
+│   ├── backend.tf
+│   ├── ec2.tf
+│   ├── ecr.tf
+│   ├── iam.tf
+│   ├── network.tf
+│   ├── rds.tf
+│   ├── security_groups.tf
+│   ├── variables.tf
+│   ├── terraform.tfvars
+│   └── versions.tf
+│
+├── .github/
+│   └── workflows/
+│       └── terraform.yaml
+│
+├── Jenkinsfile
+├── mvnw
+├── pom.xml
+└── README.md
+
+23. Development Workflow
+
+The expected developer workflow is:
+
+1. Developer changes code
+        |
+2. Commit changes
+        |
+3. Push to GitHub
+        |
+4. Jenkins detects/builds the change
+        |
+5. Maven build & tests
+        |
+6. Publish artifact to Nexus
+        |
+7. Build Docker image
+        |
+8. Push image to ECR
+        |
+9. Deploy to EKS
+
+Terraform infrastructure changes follow the GitHub Actions workflow separately.
+
+24. Current Project Status
+
+Completed
+
+AWS VPC infrastructure
+
+Public/private subnet architecture
+
+Bastion
+
+Private CI EC2
+
+RDS MySQL
+
+ALB infrastructure
+
+IAM infrastructure
+
+ECR repositories
+
+Terraform remote state
+
+GitHub Actions Terraform workflow
+
+Persistent EBS storage
+
+Jenkins container
+
+Nexus container
+
+Jenkins/Nexus Docker network
+
+GitHub → Jenkins connectivity
+
+Maven configuration
+
+Jenkins JDK/Maven configuration
+
+Build & Test stage
+
+Docker build preparation
+
+ECR authentication/push validation
+
+Current Focus
+
+Complete and validate the full Jenkins CI pipeline:
+
+Checkout
+   ↓
+Build & Test
+   ↓
+Nexus
+   ↓
+Docker Build
+   ↓
+ECR Push
+
+Next Major Stage
+
+ECR
+ ↓
+EKS
+ ↓
+Kubernetes Deployment
+
+25. Useful CI Commands
+
+Check running containers:
+
+sudo docker ps
+
+Check Jenkins logs:
+
+sudo docker logs jenkins
+
+Check Nexus logs:
+
+sudo docker logs nexus
+
+Check CI network:
+
+sudo docker network inspect amma-pickles-ci
+
+Check persistent storage:
+
+df -h /data
+
+Check Docker:
+
+sudo systemctl status docker
+
+26. Project Goal
+
+The final goal is to demonstrate an end-to-end DevOps implementation for a real microservices application:
+
+GitHub
+   ↓
+CI with Jenkins
+   ↓
+Maven Build & Test
+   ↓
+Nexus Artifact Repository
+   ↓
+Docker Images
+   ↓
+Amazon ECR
+   ↓
+Amazon EKS
+   ↓
+Running Microservices
+
+Infrastructure is provisioned with Terraform and application delivery is automated through the CI/CD pipeline.
+
+Project
+
+Amma Pickles Ecommerce — AWS DevOps Project
+
+Region: ap-northeast-1
+
+Repository: SreeNavya99/AmmaPickles-Ecommerce
 
