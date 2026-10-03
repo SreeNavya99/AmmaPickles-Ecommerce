@@ -21,6 +21,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out Amma Pickles source code...'
+
                 checkout scm
             }
         }
@@ -32,7 +33,9 @@ pipeline {
 
                     for SERVICE in $SERVICES
                     do
-                        echo "===== Building $SERVICE ====="
+                        echo "========================================"
+                        echo "Building $SERVICE"
+                        echo "========================================"
 
                         cd "$SERVICE"
 
@@ -48,6 +51,7 @@ pipeline {
 
         stage('Publish Maven Artifacts to Nexus') {
             steps {
+
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'Jenkins-nexus',
@@ -66,9 +70,40 @@ pipeline {
                         sh '''
                             set -e
 
+                            echo "========================================"
+                            echo "Checking Nexus credential injection"
+                            echo "========================================"
+
+                            if [ -n "$NEXUS_USERNAME" ]; then
+                                echo "NEXUS_USERNAME: SET"
+                            else
+                                echo "NEXUS_USERNAME: NOT SET"
+                                exit 1
+                            fi
+
+                            if [ -n "$NEXUS_PASSWORD" ]; then
+                                echo "NEXUS_PASSWORD: SET"
+                            else
+                                echo "NEXUS_PASSWORD: NOT SET"
+                                exit 1
+                            fi
+
+                            echo "Maven settings file:"
+                            echo "$MAVEN_SETTINGS"
+
+                            test -f "$MAVEN_SETTINGS"
+
+                            echo "Maven settings file exists: YES"
+
+                            echo "========================================"
+                            echo "Publishing Maven artifacts to Nexus"
+                            echo "========================================"
+
                             for SERVICE in $SERVICES
                             do
-                                echo "===== Publishing $SERVICE to Nexus ====="
+                                echo "========================================"
+                                echo "Publishing $SERVICE to Nexus"
+                                echo "========================================"
 
                                 cd "$SERVICE"
 
@@ -92,11 +127,15 @@ pipeline {
                     SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
                     IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
 
+                    echo "========================================"
                     echo "Docker image tag: $IMAGE_TAG"
+                    echo "========================================"
 
                     for SERVICE in $SERVICES
                     do
-                        echo "===== Building Docker image for $SERVICE ====="
+                        echo "========================================"
+                        echo "Building Docker image for $SERVICE"
+                        echo "========================================"
 
                         docker build \
                             -t "${SERVICE}:${IMAGE_TAG}" \
@@ -111,7 +150,9 @@ pipeline {
                 sh '''
                     set -e
 
-                    echo "Logging in to Amazon ECR..."
+                    echo "========================================"
+                    echo "Logging in to Amazon ECR"
+                    echo "========================================"
 
                     aws ecr get-login-password \
                         --region "$AWS_REGION" \
@@ -130,9 +171,15 @@ pipeline {
                     SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
                     IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
 
+                    echo "========================================"
+                    echo "Pushing Docker images to ECR"
+                    echo "========================================"
+
                     for SERVICE in $SERVICES
                     do
-                        echo "===== Pushing $SERVICE:$IMAGE_TAG to ECR ====="
+                        echo "========================================"
+                        echo "Pushing $SERVICE:$IMAGE_TAG"
+                        echo "========================================"
 
                         docker tag \
                             "${SERVICE}:${IMAGE_TAG}" \
@@ -147,16 +194,21 @@ pipeline {
     }
 
     post {
+
         success {
-            echo '========================================'
-            echo 'AMMA PICKLES CI PIPELINE SUCCESSFUL'
-            echo '========================================'
+            echo '''
+========================================
+AMMA PICKLES CI PIPELINE SUCCESSFUL
+========================================
+'''
         }
 
         failure {
-            echo '========================================'
-            echo 'AMMA PICKLES CI PIPELINE FAILED'
-            echo '========================================'
+            echo '''
+========================================
+AMMA PICKLES CI PIPELINE FAILED
+========================================
+'''
         }
 
         always {
