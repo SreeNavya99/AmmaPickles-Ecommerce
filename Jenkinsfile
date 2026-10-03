@@ -38,4 +38,20 @@
 
     </mirrors>
 
+AMMA PICKLES CI PIPELINE SUCCESSFUL
+'''
+        }
+
+        failure {
+            echo '''
+AMMA PICKLES CI PIPELINE FAILED
+'''
+        }
+
+        always {
+            echo "Build Number: ${BUILD_NUMBER}"
+            echo "Git Commit: ${GIT_COMMIT}"
+        }
+    }
+}
 </settings>
