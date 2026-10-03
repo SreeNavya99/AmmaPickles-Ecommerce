@@ -1,50 +1,213 @@
-<?xml version="1.0" encoding="UTF-8"?>
+pipeline {
+    agent any
 
-<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0
-                              https://maven.apache.org/xsd/settings-1.2.0.xsd">
+    environment {
+        AWS_REGION = 'ap-northeast-1'
+        AWS_ACCOUNT_ID = '206632868064'
+        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-    <servers>
+        NEXUS_SETTINGS_ID = 'amma-pickles-maven-settings'
 
-        <server>
-            <id>nexus-group</id>
-            <username>${env.NEXUS_USERNAME}</username>
-            <password>${env.NEXUS_PASSWORD}</password>
-        </server>
+        SERVICES = 'auth-service user-service address-service category-service product-service cart-service order-service notification-service'
+    }
 
-        <server>
-            <id>nexus-releases</id>
-            <username>${env.NEXUS_USERNAME}</username>
-            <password>${env.NEXUS_PASSWORD}</password>
-        </server>
+    tools {
+        jdk 'Java17'
+        maven 'Maven3'
+    }
 
-        <server>
-            <id>nexus-snapshots</id>
-            <username>${env.NEXUS_USERNAME}</username>
-            <password>${env.NEXUS_PASSWORD}</password>
-        </server>
+    stages {
 
-    </servers>
+        stage('Checkout') {
+            steps {
+                echo 'Checking out Amma Pickles source code...'
 
-    <mirrors>
+                checkout scm
+            }
+        }
 
-        <mirror>
-            <id>nexus-group</id>
-            <name>Amma Pickles Nexus Maven Group</name>
-            <url>http://nexus:8081/repository/amma-pickles-maven-group/</url>
-            <mirrorOf>*</mirrorOf>
-        </mirror>
+        stage('Build & Test') {
+            steps {
+                sh '''
+                    set -e
 
-    </mirrors>
+                    for SERVICE in $SERVICES
+                    do
+                        echo "========================================"
+                        echo "Building $SERVICE"
+                        echo "========================================"
 
+                        cd "$SERVICE"
+
+                        chmod +x ../mvnw
+
+                        ../mvnw clean verify
+
+                        cd ..
+                    done
+                '''
+            }
+        }
+
+        stage('Publish Maven Artifacts to Nexus') {
+            steps {
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'Jenkins-nexus',
+                        usernameVariable: 'NEXUS_USERNAME',
+                        passwordVariable: 'NEXUS_PASSWORD'
+                    )
+                ]) {
+
+                    configFileProvider([
+                        configFile(
+                            fileId: "${NEXUS_SETTINGS_ID}",
+                            variable: 'MAVEN_SETTINGS'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -e
+
+                            echo "========================================"
+                            echo "Checking Nexus credential injection"
+                            echo "========================================"
+
+                            if [ -n "$NEXUS_USERNAME" ]; then
+                                echo "NEXUS_USERNAME: SET"
+                            else
+                                echo "NEXUS_USERNAME: NOT SET"
+                                exit 1
+                            fi
+
+                            if [ -n "$NEXUS_PASSWORD" ]; then
+                                echo "NEXUS_PASSWORD: SET"
+                            else
+                                echo "NEXUS_PASSWORD: NOT SET"
+                                exit 1
+                            fi
+
+                            echo "Maven settings file:"
+                            echo "$MAVEN_SETTINGS"
+
+                            test -f "$MAVEN_SETTINGS"
+
+                            echo "Maven settings file exists: YES"
+
+                            echo "========================================"
+                            echo "Publishing Maven artifacts to Nexus"
+                            echo "========================================"
+
+                            for SERVICE in $SERVICES
+                            do
+                                echo "========================================"
+                                echo "Publishing $SERVICE to Nexus"
+                                echo "========================================"
+
+                                cd "$SERVICE"
+
+                                ../mvnw deploy \
+                                    --settings "$MAVEN_SETTINGS" \
+                                    -DskipTests
+
+                                cd ..
+                            done
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    set -e
+
+                    SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
+                    IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
+
+                    echo "========================================"
+                    echo "Docker image tag: $IMAGE_TAG"
+                    echo "========================================"
+
+                    for SERVICE in $SERVICES
+                    do
+                        echo "========================================"
+                        echo "Building Docker image for $SERVICE"
+                        echo "========================================"
+
+                        docker build \
+                            -t "${SERVICE}:${IMAGE_TAG}" \
+                            "./${SERVICE}"
+                    done
+                '''
+            }
+        }
+
+        stage('Login to Amazon ECR') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "========================================"
+                    echo "Logging in to Amazon ECR"
+                    echo "========================================"
+
+                    aws ecr get-login-password \
+                        --region "$AWS_REGION" \
+                    | docker login \
+                        --username AWS \
+                        --password-stdin "$ECR_REGISTRY"
+                '''
+            }
+        }
+
+        stage('Push Images to ECR') {
+            steps {
+                sh '''
+                    set -e
+
+                    SHORT_COMMIT=$(printf "%.7s" "$GIT_COMMIT")
+                    IMAGE_TAG="${BUILD_NUMBER}-${SHORT_COMMIT}"
+
+                    echo "========================================"
+                    echo "Pushing Docker images to ECR"
+                    echo "========================================"
+
+                    for SERVICE in $SERVICES
+                    do
+                        echo "========================================"
+                        echo "Pushing $SERVICE:$IMAGE_TAG"
+                        echo "========================================"
+
+                        docker tag \
+                            "${SERVICE}:${IMAGE_TAG}" \
+                            "${ECR_REGISTRY}/amma-pickles/${SERVICE}:${IMAGE_TAG}"
+
+                        docker push \
+                            "${ECR_REGISTRY}/amma-pickles/${SERVICE}:${IMAGE_TAG}"
+                    done
+                '''
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo '''
+========================================
 AMMA PICKLES CI PIPELINE SUCCESSFUL
+========================================
 '''
         }
 
         failure {
             echo '''
+========================================
 AMMA PICKLES CI PIPELINE FAILED
+========================================
 '''
         }
 
@@ -54,4 +217,3 @@ AMMA PICKLES CI PIPELINE FAILED
         }
     }
 }
-</settings>
