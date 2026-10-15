@@ -1,28 +1,56 @@
+# Discover compatible managed add-on versions
+
+data "aws_eks_addon_version" "vpc_cni" {
+  addon_name         = "vpc-cni"
+  kubernetes_version = var.kubernetes_version
+  most_recent        = true
+}
+
+data "aws_eks_addon_version" "coredns" {
+  addon_name         = "coredns"
+  kubernetes_version = var.kubernetes_version
+  most_recent        = true
+}
+
+data "aws_eks_addon_version" "kube_proxy" {
+  addon_name         = "kube-proxy"
+  kubernetes_version = var.kubernetes_version
+  most_recent        = true
+}
+
+
+# VPC CNI: Pod networking
+
 resource "aws_eks_addon" "vpc_cni" {
-  cluster_name             = var.cluster_name
-  addon_name               = "vpc-cni"
-  addon_version            = var.vpc_cni_version
-  service_account_role_arn = var.vpc_cni_role_arn
+  cluster_name  = var.cluster_name
+  addon_name    = "vpc-cni"
+  addon_version = data.aws_eks_addon_version.vpc_cni.version
 
   lifecycle {
     prevent_destroy = true
   }
 }
+
+
+# CoreDNS: Kubernetes DNS and service discovery
 
 resource "aws_eks_addon" "coredns" {
   cluster_name  = var.cluster_name
   addon_name    = "coredns"
-  addon_version = var.coredns_version
+  addon_version = data.aws_eks_addon_version.coredns.version
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
+
+# kube-proxy: Kubernetes Service networking
+
 resource "aws_eks_addon" "kube_proxy" {
   cluster_name  = var.cluster_name
   addon_name    = "kube-proxy"
-  addon_version = var.kube_proxy_version
+  addon_version = data.aws_eks_addon_version.kube_proxy.version
 
   lifecycle {
     prevent_destroy = true

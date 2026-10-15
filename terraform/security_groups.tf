@@ -16,6 +16,10 @@ module "security" {
   rds_name        = "amma-pickles-rds-sg"
   rds_description = "sg for rds"
 
+
+  eks_cluster_name        = "amma-pickles-eks-cluster-sg"
+  eks_cluster_description = "Security group for Amma Pickles EKS cluster"
+
 }
 
 moved {
@@ -37,3 +41,14 @@ moved {
   from = aws_security_group.rds
   to   = module.security.aws_security_group.rds
 }
+
+resource "aws_security_group_rule" "rds_from_eks" {
+  description              = "MySQLFromEKS"
+  type                     = "ingress"
+  security_group_id        = module.security.rds_security_group_id
+  source_security_group_id = module.eks.cluster_security_group_id
+  protocol                 = "tcp"
+  from_port                = 3306
+  to_port                  = 3306
+}
+

@@ -38,3 +38,12 @@ variable "rds_name" {
 variable "rds_description" {
   type = string
 }
+variable "eks_cluster_name" {
+  description = "Name of the EKS cluster security group"
+  type        = string
+}
+
+variable "eks_cluster_description" {
+  description = "Description of the EKS cluster security group"
+  type        = string
+}
