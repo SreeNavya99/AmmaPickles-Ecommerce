@@ -6,11 +6,11 @@ resource "aws_eks_cluster" "amma_pickles" {
   vpc_config {
     subnet_ids = var.subnet_ids
 
-    endpoint_private_access = false
+    endpoint_private_access = true
     endpoint_public_access  = true
 
     public_access_cidrs = [
-      "0.0.0.0/0"
+      var.bastion_ssh_cidr
     ]
 
     security_group_ids = [
@@ -41,11 +41,6 @@ resource "aws_eks_node_group" "amma_pickles" {
   }
 
   labels = var.node_labels
-
-  launch_template {
-    id      = var.launch_template_id
-    version = var.launch_template_version
-  }
 
   lifecycle {
     prevent_destroy = true
