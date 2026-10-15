@@ -57,3 +57,8 @@ variable "bastion_ssh_cidr" {
   description = "Trusted public IP range for EKS API access"
   type        = list(string)
 }
+variable "public_access_cidrs" {
+    description = "Allowed CIDR ranges for EKS public API access"
+      type        = list(string)
+    }
+

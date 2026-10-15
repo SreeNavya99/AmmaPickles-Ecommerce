@@ -8,7 +8,7 @@ resource "aws_security_group" "bastion" {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = var.bastion_ssh_cidr
+    cidr_blocks = [var.bastion_ssh_cidr]
   }
 
   egress {

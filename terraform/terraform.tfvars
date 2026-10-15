@@ -29,7 +29,12 @@ nat_eip_count = 1
 bastion_ami_id        = "ami-06380d26ad7176f2c"
 bastion_instance_type = "t3.micro"
 ec2_key_name          = "keypair"
-bastion_ssh_cidr      = ["49.43.233.95/32", "35.76.225.32/32"]
+bastion_ssh_cidr = "49.43.233.95/32"
+
+eks_public_access_cidrs = [
+  "49.43.233.95/32",
+  "35.76.225.32/32"
+]
 
 app_ami_id        = "ami-06380d26ad7176f2c"
 app_instance_type = "c7i-flex.large"

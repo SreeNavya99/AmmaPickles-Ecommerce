@@ -156,3 +156,8 @@ variable "storage_name" {
   type        = string
 }
 
+variable "eks_public_access_cidrs" {
+    description = "Allowed CIDR ranges for EKS public API access"
+      type        = list(string)
+    }
+
