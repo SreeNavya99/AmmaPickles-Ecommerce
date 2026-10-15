@@ -7,6 +7,7 @@ module "eks" {
   subnet_ids                = values(module.network.private_app_subnet_ids)
   cluster_security_group_id = module.security.eks_cluster_security_group_id
   bastion_ssh_cidr          = var.bastion_ssh_cidr
+  public_access_cidrs       = var.eks_public_access_cidrs
 
   cluster_tags = {
     Name        = "${var.project_name}-eks"

@@ -9,9 +9,8 @@ resource "aws_eks_cluster" "amma_pickles" {
     endpoint_private_access = true
     endpoint_public_access  = true
 
-    public_access_cidrs = [
-      var.bastion_ssh_cidr
-    ]
+    public_access_cidrs = var.public_access_cidrs
+
 
     security_group_ids = [
       var.cluster_security_group_id
