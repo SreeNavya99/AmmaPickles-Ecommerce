@@ -55,5 +55,5 @@ variable "node_tags" {
 }
 variable "bastion_ssh_cidr" {
   description = "Trusted public IP range for EKS API access"
-  type        = string
+  type        = list(string)
 }
