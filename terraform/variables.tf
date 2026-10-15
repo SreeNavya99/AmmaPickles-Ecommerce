@@ -50,7 +50,7 @@ variable "ec2_key_name" {
 
 variable "bastion_ssh_cidr" {
   description = "CIDR allowed to SSH to bastion"
-  type        = string
+  type        = list(string)
 }
 
 variable "app_ami_id" {
