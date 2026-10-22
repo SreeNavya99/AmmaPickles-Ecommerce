@@ -41,9 +41,5 @@ resource "aws_eks_node_group" "amma_pickles" {
 
   labels = var.node_labels
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
   tags = var.node_tags
 }

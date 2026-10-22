@@ -73,6 +73,16 @@ module "iam" {
         Resource = "*"
       },
       {
+        Sid    = "AutoScalingReadOnly"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeScalingActivities"
+        ]
+        Resource = "*"
+      },
+      {
         Sid      = "CloudWatchAccess"
         Effect   = "Allow"
         Action   = ["cloudwatch:*"]
