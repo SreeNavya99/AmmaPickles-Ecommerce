@@ -52,3 +52,13 @@ resource "aws_security_group_rule" "rds_from_eks" {
   to_port                  = 3306
 }
 
+resource "aws_security_group_rule" "rds_from_app" {
+  description              = "MySQLFromApp"
+  type                     = "ingress"
+  security_group_id        = module.security.rds_security_group_id
+  source_security_group_id = module.security.app_security_group_id
+  protocol                 = "tcp"
+  from_port                = 3306
+  to_port                  = 3306
+}
+

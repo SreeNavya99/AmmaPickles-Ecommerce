@@ -50,7 +50,7 @@ variable "ec2_key_name" {
 
 variable "bastion_ssh_cidr" {
   description = "CIDR allowed to SSH to bastion"
-  type        = list(string)
+  type        = string
 }
 
 variable "app_ami_id" {
@@ -154,5 +154,10 @@ variable "storage_volume_type" {
 variable "storage_name" {
   description = "Name tag for application storage"
   type        = string
+}
+
+variable "eks_public_access_cidrs" {
+  description = "Allowed CIDR ranges for EKS public API access"
+  type        = list(string)
 }
 

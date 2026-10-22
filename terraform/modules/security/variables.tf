@@ -12,7 +12,7 @@ variable "bastion_description" {
 }
 
 variable "bastion_ssh_cidr" {
-  type = list(string)
+  type = string
 }
 
 variable "app_name" {
